@@ -3,6 +3,7 @@
 #include <string.h>
 
 #define TABLE_SIZE 256
+#define SLASH 92
 
 typedef unsigned char BYTE;
 
@@ -19,13 +20,22 @@ typedef struct queue {
 }QUEUE;
 
 typedef struct element {
-    int frequencia;
-    char string[50];
+    int freq;
+    char way[50];
 }ELEMENT;
 
 typedef struct hash {
     ELEMENT *table[TABLE_SIZE];
 }HASH;
+
+unsigned char setBit(unsigned char c, int i) {
+    unsigned char mask = 1 << i;
+    return mask | c;
+}
+
+int verify(void *item1, unsigned char item2) {
+    return (*((unsigned char *)item1) == item2);
+}
 
 NODE* createNode(void *item, int frequency) {
     NODE *new_node = (NODE *)malloc(sizeof(NODE));
@@ -38,49 +48,49 @@ NODE* createNode(void *item, int frequency) {
 
 ELEMENT* createElement() {
     ELEMENT *new_element = (ELEMENT *)malloc(sizeof(ELEMENT));
-    new_element->frequencia = 0;
+    new_element->freq = 0;
     return new_element;
 }
 
 HASH* createHash() {
     HASH *new_hash = (HASH *)malloc(sizeof(HASH));
     int i;
-    for(i = 0; i < 256; i++) {
+    for(i = 0; i <= TABLE_SIZE; i++) {
         new_hash->table[i] = NULL;
     }
     return new_hash;
 }
 
-HASH* initHash(HASH *h) {
+HASH* initHash(HASH *hash) {
     for(int i = 0; i < TABLE_SIZE; i++) {
-        h->table[i] = createElement();
+        hash->table[i] = createElement();
     }
-    return h;
+    return hash;
 }
 
-HASH* frequency(HASH *h, FILE *file) {
-    BYTE index;
+HASH* frequency(HASH *hash, FILE *file) {
+    unsigned char index;
     while (!feof(file)) {
         index = fgetc(file);
-        h->table[(int)index]->frequencia += 1;
+        hash->table[(int)index]->freq++;
     }
-    return h;
+    return hash;
 }
 
-void add_way(HASH *table, void *item, char *bits, int n) {
+void addWay(HASH *table, void *item, char *bits, int n) {
     int aux = *(unsigned char *)item;
-    ELEMENT *new_element = createElement();
-    new_element->frequencia = n;
-    for(int i = 0; i < n; i++) {
-        new_element->string[i] = bits[i];
+    int i = 0;
+    while(bits[i] != '\0') {
+        table->table[aux]->way[i] = bits[i];
+        i++;
     }
-    table->table[aux] = new_element;
+    table->table[aux]->way[i] = '\0';
 }
 
 void printHash(HASH *hash) {
     int i, j;
-    for (i = 0; i < 256; i++) {
-        j = hash->table[i]->frequencia;
+    for (i = 0; i < TABLE_SIZE; i++) {
+        j = hash->table[i]->freq;
         if (j > 0)
             printf("%c|%d -> %d \n", (char)i, i, j);
     }
@@ -115,7 +125,7 @@ void enqueue(QUEUE *queue, void *item, int frequency) {
     }
 }
 
-void enqueue_nodes(QUEUE *queue, NODE *head) {
+void enqueueNodes(QUEUE *queue, NODE *head) {
     if(emptyQueue(queue) || head->frequency <= queue->head->frequency) {
         head->next = queue->head;
         queue->head = head;
@@ -124,8 +134,8 @@ void enqueue_nodes(QUEUE *queue, NODE *head) {
         while(current->next != NULL && current->next->frequency < head->frequency) {
             current = current->next;
         }
-        head->next = queue->head;
-        queue->head = head;
+        head->next = current->next;
+        current->next = head;
     }
 }
 
@@ -142,13 +152,20 @@ NODE *dequeue(QUEUE *queue) {
 
 QUEUE* generateFreqeucencyQueue(HASH* h, QUEUE* queue){
     for(int i = 0; i < TABLE_SIZE; i++) {
-        if(h->table[i]->frequencia > 0) {
+        if(h->table[i]->freq > 0) {
             unsigned char *aux = (unsigned char *)malloc(sizeof(unsigned char));
             *aux = i;
-            enqueue(queue, aux, h->table[i]->frequencia);
+            enqueue(queue, aux, h->table[i]->freq);
         }
     }
     return queue;
+}
+
+short isLeaf(NODE *root) {
+    if(root->left == NULL && root->right == NULL) {
+        return 1;
+    }
+    return 0;
 }
 
 NODE* mergeNodes(QUEUE *queue) {
@@ -156,58 +173,98 @@ NODE* mergeNodes(QUEUE *queue) {
         unsigned char *aux = (unsigned char *)malloc(sizeof(unsigned char));
         *aux = '*';
         NODE *new_node = (NODE *)malloc(sizeof(NODE));
+        new_node->item = aux;
         new_node->left = dequeue(queue);
         new_node->right = dequeue(queue);
-        new_node->item = aux;
         new_node->frequency = new_node->left->frequency + new_node->right->frequency;
-        enqueue_nodes(queue, new_node);
+        enqueueNodes(queue, new_node);
         mergeNodes(queue);
     } else {
         return queue->head;
     }
 }
 
-void create_huffman_three(NODE *root, HASH* table, char *way, int count) {
-    if(root->left == NULL && root->right == NULL) {
-        add_way(table, root->item, way, count);
+void createHuffmanTree(NODE *root, HASH* table, char *way, int count) {
+    if(isLeaf(root)) {
+        way[count] = '\0';
+        addWay(table, root->item, way, count);
     } else {
         way[count] = '0';
-        create_huffman_three(root->left, table, way, count);
+        createHuffmanTree(root->left, table, way, count+1);
         way[count] = '1';
-        create_huffman_three(root->right, table, way, count);
+        createHuffmanTree(root->right, table, way, count+1);
+    }
+}
+
+int getTrashSize(HASH *hash) {
+    int i, trash = 0;
+    int bit, freq;
+    for(i = 0; i < TABLE_SIZE; i++) {
+        if(hash->table[i]->freq > 0) {
+            bit = strlen(hash->table[i]->way);
+            freq = hash->table[i]->freq;
+            trash += bit * freq;
+        }
+    }
+    trash = 8 - (trash % 8);
+    return trash;
+}
+
+int getSizeTree(NODE *root) {
+    if(isLeaf(root)) {
+        if(verify(root->item, (char)SLASH) || verify(root->item, '*')) {
+            return 2;
+        } else {
+            return 1;
+        }
+    } else {
+        return 1 + getSizeTree(root->left) + getSizeTree(root->right);
     }
 }
 
 int main() {
     char filename[50];
-    char huffman_path[TABLE_SIZE];
-
-    printf("Enter to the filename: ");
-    scanf("%s", filename);
+    char huffmanPath[TABLE_SIZE];
+    int count = 0;
+    short trash, sizeTree, final;
+    unsigned char current_byte, compact = 0;
 
     NODE *root = NULL;
     HASH *new_hash = createHash();
     QUEUE *new_queue = createQueue();
-
-    FILE *file = fopen(filename, "rb");
-
     FILE *final_file;
-    printf("Saving frequencies...\n");
+
+    printf("Enter to the filename: ");
+    scanf("%s", filename);
+    FILE *file = fopen(filename, "rb");
+    if(file == NULL) {
+        printf("File not found...\n");
+        exit(1);
+    }
+    
+    printf("\nSave frequencies on Hash Table...\n");
     printf("Initializing Hash...\n");
-    new_hash = initHash(new_hash); //start hash with values of ASCII TABLE    
-    printf("Add frequency and characteres on Hash Table...\n");
+    new_hash = initHash(new_hash); //start hash with values of ASCII TABLE   
+    printf("Add frequency characteres on Hash Table...\n");
     new_hash = frequency(new_hash, file); //add characteres and frequencies on hash table
+    if(new_hash->table[255]->freq > 0)
+        new_hash->table[255]->freq--; //remove charactere 255 read on fgetc
     printf("Creating Priority Queue...\n");
     new_queue = generateFreqeucencyQueue(new_hash, new_queue); //generate frequency priority queue
-    printf("Done!\n\n");
-
+    printf("DONE!\n\n");
 
     printf("Merge all nodes on tree..\n");
     root = mergeNodes(new_queue);
     printf("Creating a Huffman tree..\n");
-    create_huffman_three(root, new_hash, huffman_path, 0);
-    printf("Ok!\n\n");
+    createHuffmanTree(root, new_hash, huffmanPath, 0);
+    printf("DONE!\n\n");
     
+    printf("Get size trash...\n");
+    trash = getTrashSize(new_hash);
+    sizeTree = getSizeTree(root);
+    printf("TREE SIZE: %d\n", sizeTree);
+
+
     fclose(file);
     return 0;
 }
