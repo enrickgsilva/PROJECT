@@ -3,7 +3,7 @@
 void descompactar() {
     char nomedoarquivo[50];
     FILE *compactado;
-    printf("Digite o nome do arquivo que deseja descompactar!\n");
+    printf("Entre com o nome do arquivo que deseja descompactar: ");
     scanf("%s", nomedoarquivo);
     compactado = fopen(nomedoarquivo, "rb");
     descompressao(compactado, nomedoarquivo);
@@ -18,22 +18,29 @@ int descompressao(FILE *compactado, char *nome)
     NODE *raiz = NULL;
     FILE *descompactado;
     getchar();
-    printf("Digite o nome final do arquivo:\n");
+    printf("Digite o nome final do arquivo: ");
     scanf("%[^\n]s", nome_saida);
     compactado = fopen(nome, "rb"); // Lê o arquivo em binário
     descompactado = fopen(nome_saida, "wb"); // Escreve em binário no novo arquivo
     fseek(compactado, 0, SEEK_END); //Vai até  o final do arquivo
+    
     tamanho_arquivo = ftell(compactado); // size_file recebe o tamanho do arquivo em bytes
 	rewind(compactado); // Retorna para o início do arquivo
+    
     primeirobyte = fgetc(compactado); // f_byte recebe o primeiro byte do arquivo
-	segundobyte = fgetc(compactado); // s_byte recebe o segundo byte do arquivo
-	tamanho_lixo = primeirobyte >> 5; // size_trash recebe os 3 bits de tamanho do lixo
-	tamanho_arvore = ((primeirobyte << 8) | segundobyte) & tamanho_arvore; // size_tree vai receber o tamanho da arvore
-	raiz = montar_arvore(compactado); // monta a arvore
+	
+    segundobyte = fgetc(compactado); // s_byte recebe o segundo byte do arquivo
+	
+    tamanho_lixo = primeirobyte >> 5; // size_trash recebe os 3 bits de tamanho do lixo
+	
+    tamanho_arvore = ((primeirobyte << 8) | segundobyte) & tamanho_arvore; // size_tree vai receber o tamanho da arvore
+	
+    raiz = montar_arvore(compactado); // monta a arvore
 	fseek(compactado, tamanho_arvore + 2, SEEK_SET); // Escreve depois da arvore no novo arquivo
-	printar_byte(compactado, descompactado, raiz, tamanho_arvore, tamanho_lixo, tamanho_arquivo-2-tamanho_arvore); // Escreve tudo no arquivo
+	printar_byte(compactado, descompactado, raiz, tamanho_arvore, tamanho_lixo, (tamanho_arquivo-tamanho_arvore-2)); // Escreve tudo no arquivo
 	fclose(compactado);
 	fclose(descompactado);
+    printf("\nArquivo descompactado com sucesso!\n");
 	return 0;
 }
 

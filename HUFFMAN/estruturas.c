@@ -151,6 +151,7 @@ NODE *desenfileirar(QUEUE *fila)
     if (fila_vazia(fila))
     {
         printf("Priority Queue Underflow\n");
+        return NULL;
     }
     else
     {

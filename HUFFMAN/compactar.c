@@ -11,7 +11,7 @@ void compactando_arquivo(FILE *arquivo, FILE *arquivo_final, HASH *hash)
     unsigned char byte_atual, compactando = 0;
 
     printf("\nCompactando arquivo...\n");
-    printf("\nIsto pode demorar um pouco!\nOu não...\n\n");
+    printf("\nIsto pode demorar um pouco...\n");
     while (!feof(arquivo))
     {
         byte_atual = fgetc(arquivo);
@@ -47,7 +47,7 @@ void compactar(){
     short lixo, tam_arvore, final;
     unsigned char byte;
 
-    NODE *root = NULL;
+    NODE *raiz = NULL;
     HASH *nova_hash = criar_hash();
     QUEUE *nova_fila = criar_fila();
     FILE *arquivo_final;
@@ -61,18 +61,18 @@ void compactar(){
         exit(1);
     }
 
-
+    printf("\nIniciando a compactação!\n");
     nova_hash = inicializar_hash(nova_hash); 
     nova_hash = gerar_frequencias(nova_hash, arquivo); 
     rewind(arquivo);
 
     nova_fila = gerar_fila_de_prioridade(nova_hash, nova_fila); 
 
-    root = criar_arvore_de_huffman(nova_fila);
-    criar_caminho(root, nova_hash, caminho_da_arvore, 0);
+    raiz = criar_arvore_de_huffman(nova_fila);
+    criar_caminho(raiz, nova_hash, caminho_da_arvore, 0);
 
     lixo = tamanho_do_lixo(nova_hash);
-    tam_arvore = tamanho_da_arvore(root);
+    tam_arvore = tamanho_da_arvore(raiz);
 
     createfile(nomedoarquivo);
     arquivo_final = fopen(nomedoarquivo, "wb");
@@ -87,9 +87,9 @@ void compactar(){
     byte = final; 
     fprintf(arquivo_final, "%c", byte);
 
-    imprimir_arvore_no_arquivo(root, arquivo_final);
+    imprimir_arvore_no_arquivo(raiz, arquivo_final);
 
-    fseek(arquivo_final, 2 + tam_arvore, SEEK_SET);
+    fseek(arquivo_final, (2 + tam_arvore), SEEK_SET);
 
     compactando_arquivo(arquivo, arquivo_final, nova_hash);
 
