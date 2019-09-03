@@ -3,7 +3,7 @@
 
 #include "estruturas.h"
 
-void createfile(char *nomedoarquivo);
+void criar_arquivo(char *nomedoarquivo); 
 
 void compactar_arquivo(FILE *arquivo, FILE *arquivo_final, HASH *hash);
 

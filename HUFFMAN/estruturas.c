@@ -65,27 +65,16 @@ HASH *gerar_frequencias(HASH *hash, FILE *arquivo)
     return hash;
 }
 
-void adicionar_caminho(HASH *table, void *item, char *bits)
+void adicionar_caminho(HASH *hash, void *item, char *bits)
 {
     int aux = *(unsigned char *)item;
     int i = 0;
     while (bits[i] != '\0')
     {
-        table->tabela[aux]->caminho[i] = bits[i];
+        hash->tabela[aux]->caminho[i] = bits[i];
         i++;
     }
-    table->tabela[aux]->caminho[i] = '\0';
-}
-
-void imprimir_hash(HASH *hash)
-{
-    int i, aux;
-    for (i = 0; i < TAMANHO_DA_TABELA; i++)
-    {
-        aux = hash->tabela[i]->freq;
-        if (aux > 0)
-            printf("%c|%d -> %d \n", (char)i, i, aux);
-    }
+    hash->tabela[aux]->caminho[i] = '\0';
 }
 
 short fila_vazia(QUEUE *fila)
@@ -257,29 +246,6 @@ int tamanho_da_arvore(NODE *raiz)
     {
         return 1 + tamanho_da_arvore(raiz->esquerda) + tamanho_da_arvore(raiz->direita);
     }
-}
-
-void imprimir_caminho(HASH *hash)
-{
-    int i;
-    for (i = 0; i < TAMANHO_DA_TABELA; i++)
-    {
-        if (hash->tabela[i]->freq > 0)
-        {
-            printf("CARACTERE: %c | CAMINHO: %s\n", i, hash->tabela[i]->caminho);
-        }
-    }
-}
-
-void imprimir_arvore(NODE *raiz)
-{
-    if (raiz == NULL)
-        return;
-    unsigned char *aux = (unsigned char *)malloc(sizeof(unsigned char));
-    aux = raiz->item;
-    printf("%c", *aux);
-    imprimir_arvore(raiz->esquerda);
-    imprimir_arvore(raiz->direita);
 }
 
 void imprimir_arvore_no_arquivo(NODE *raiz, FILE *arquivo_para_compactar)

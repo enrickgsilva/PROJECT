@@ -24,16 +24,16 @@ int descompressao(FILE *compactado, char *nome)
     descompactado = fopen(nome_saida, "wb"); // Escreve em binário no novo arquivo
     fseek(compactado, 0, SEEK_END); //Vai até  o final do arquivo
     
-    tamanho_arquivo = ftell(compactado); // size_file recebe o tamanho do arquivo em bytes
+    tamanho_arquivo = ftell(compactado); // tamanho_arquivo recebe o tamanho do arquivo em bytes
 	rewind(compactado); // Retorna para o início do arquivo
     
     primeirobyte = fgetc(compactado); // f_byte recebe o primeiro byte do arquivo
 	
     segundobyte = fgetc(compactado); // s_byte recebe o segundo byte do arquivo
 	
-    tamanho_lixo = primeirobyte >> 5; // size_trash recebe os 3 bits de tamanho do lixo
+    tamanho_lixo = primeirobyte >> 5; // tamanho_lixo recebe os 3 bits de tamanho do lixo
 	
-    tamanho_arvore = ((primeirobyte << 8) | segundobyte) & tamanho_arvore; // size_tree vai receber o tamanho da arvore
+    tamanho_arvore = ((primeirobyte << 8) | segundobyte) & tamanho_arvore; // tamanho arvore vai receber o tamanho da arvore
 	
     raiz = montar_arvore(compactado); // monta a arvore
 	fseek(compactado, tamanho_arvore + 2, SEEK_SET); // Escreve depois da arvore no novo arquivo

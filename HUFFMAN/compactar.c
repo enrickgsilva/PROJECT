@@ -1,6 +1,6 @@
 #include "estruturas.h"
 
-void createfile(char *nomedoarquivo) {
+void criar_arquivo(char *nomedoarquivo) {
     nomedoarquivo = strtok(nomedoarquivo, ".");
     nomedoarquivo = strcat(nomedoarquivo, ".huff");
 }
@@ -74,7 +74,7 @@ void compactar(){
     lixo = tamanho_do_lixo(nova_hash);
     tam_arvore = tamanho_da_arvore(raiz);
 
-    createfile(nomedoarquivo);
+    criar_arquivo(nomedoarquivo);
     arquivo_final = fopen(nomedoarquivo, "wb");
 
     lixo = lixo << 13;
