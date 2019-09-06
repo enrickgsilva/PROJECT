@@ -187,14 +187,11 @@ int main()
 	bt *binary_tree = NULL;
 	avl *tree = NULL; 
 
-	FILE *AVL1 = NULL;
-	FILE *ABB1 = NULL;
+	FILE *Comp_Data = NULL;
 
-	AVL1 = fopen("AVL.csv", "w");
-	ABB1 = fopen("ABB.csv", "w");
-	
-	fprintf(AVL1, "%s\t%s\n", "Comparações_AVL", "Tamanho_AVL");
-	fprintf(ABB1, "%s\t%s\n", "Comparações_ABB", "Tamanho_ABB");
+	Comp_Data = fopen("Comp_Data.txt", "w");
+
+	fprintf(Comp_Data, "%s\t%s\t%s\t%s\n", "Comparações_AVL", "Tamanho_AVL", "Comparações_ABB", "Tamanho_ABB");
 
 	int i, x, index, array_size, counter;
 	int countAVL = 0, countABB = 0;
@@ -225,14 +222,12 @@ int main()
 			countAVL = ABB_AVL_counter(tree, array[index]);
 			array_visited[index] = 1;
 
-			fprintf(AVL1, "%d\t%d\n", countAVL, index+1);
-            fprintf(ABB1, "%d\t%d\n", countABB, index+1);
+			fprintf(Comp_Data, "%d\t%d\t%d\t%d\n", countAVL, index+1, countABB, index+1);
 		}
 	}
 
 	free(array);
 	free(array_visited);
-	fclose(AVL1);
-    fclose(ABB1);
+
 	return 0;
 }
